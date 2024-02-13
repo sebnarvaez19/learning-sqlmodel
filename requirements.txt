@@ -1,0 +1,4 @@
+pydantic
+fastapi
+sqlmodel
+uvicorn[standard]
