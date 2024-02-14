@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from .database import create_db_and_tables, engine
 from .models import Hero, Team
@@ -22,10 +22,10 @@ def create_hero(hero: Hero) -> Hero:
         
         return hero
 
-    
-def main():
-    pass
-    
 
-if __name__ == "__main__":
-    main()
+@app.get("/heroes/")
+def read_heroes():
+    with Session(engine) as session:
+        heroes = session.exec(select(Hero)).all()
+
+        return heroes
