@@ -15,7 +15,7 @@ def on_startup():
     create_db_and_tables()
 
 
-@app.post("/heroes/", respose_model=Hero)
+@app.post("/heroes/", response_model=Hero)
 def create_hero(hero: Hero) -> Hero:
     with Session(engine) as session:
         session.add(hero)
