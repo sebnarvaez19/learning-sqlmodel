@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, Query, Depends
 from sqlmodel import Session, select
 
 from .database import create_db_and_tables, engine
-from .models import Hero, HeroCreate, HeroRead, HeroUpdate
+from .models import Hero, HeroCreate, HeroRead, HeroUpdate, Team, TeamCreate, TeamRead, TeamUpdate
 
 
 app = FastAPI()
