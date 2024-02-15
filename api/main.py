@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from sqlmodel import Session, select
 
 from .database import create_db_and_tables, engine
-from .models import Hero, Team
+from .models import Hero, HeroCreate, HeroRead
 
 
 app = FastAPI()
@@ -15,14 +15,15 @@ def on_startup():
     create_db_and_tables()
 
 
-@app.post("/heroes/", response_model=Hero)
-def create_hero(hero: Hero) -> Hero:
+@app.post("/heroes/", response_model=HeroRead)
+def create_hero(hero: HeroCreate) -> Hero:
     with Session(engine) as session:
-        session.add(hero)
+        db_hero = Hero.model_validate(hero)
+        session.add(db_hero)
         session.commit()
-        session.refresh(hero)
+        session.refresh(db_hero)
         
-        return hero
+        return db_hero
 
 
 @app.get("/heroes/", response_model=List[Hero])
