@@ -54,3 +54,11 @@ class HeroUpdate(SQLModel):
     secret_name: Optional[str] = None
     age: Optional[int] = None
     team_id: Optional[int] = None
+
+
+class HeroReadWithTeam(HeroRead):
+    team: Optional[TeamRead] = None
+
+
+class TeamReadWithHeroes(TeamRead):
+    heroes: List[HeroRead] = []

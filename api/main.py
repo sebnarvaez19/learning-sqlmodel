@@ -4,8 +4,8 @@ from fastapi import FastAPI, HTTPException, Query, Depends
 from sqlmodel import Session, select
 
 from .database import create_db_and_tables, engine
-from .models import Hero, HeroCreate, HeroRead, HeroUpdate, Team, TeamCreate, TeamRead, TeamUpdate
-
+from .models import Hero, HeroCreate, HeroRead, HeroUpdate, Team, TeamCreate, TeamRead, TeamUpdate, HeroReadWithTeam, \
+    TeamReadWithHeroes
 
 app = FastAPI()
 
@@ -37,7 +37,7 @@ def read_teams(*, session: Session = Depends(get_session), offset: int = 0, limi
     return teams
 
 
-@app.get("/teams/{team_id}", response_model=TeamRead)
+@app.get("/teams/{team_id}", response_model=TeamReadWithHeroes)
 def read_team(*, session: Session = Depends(get_session), team_id: int):
     team = session.get(Team, team_id)
     if not team:
@@ -92,7 +92,7 @@ def read_heroes(*, session: Session = Depends(get_session), offset: int = 0, lim
     return heroes
 
 
-@app.get("/heroes/{hero_id}", response_model=HeroRead)
+@app.get("/heroes/{hero_id}", response_model=HeroReadWithTeam)
 def read_hero(*, session: Session = Depends(get_session), hero_id: int):
     hero = session.get(Hero, hero_id)
     if not hero:
