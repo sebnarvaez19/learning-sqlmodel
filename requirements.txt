@@ -2,3 +2,5 @@ pydantic
 fastapi
 sqlmodel
 uvicorn[standard]
+requests
+pytest
