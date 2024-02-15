@@ -11,6 +11,8 @@ class TeamBase(SQLModel):
 class Team(TeamBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
+    heroes: List["Hero"] = Relationship(back_populates="team")
+
 
 class TeamCreate(TeamBase):
     pass
@@ -30,9 +32,13 @@ class HeroBase(SQLModel):
     secret_name: str
     age: Optional[int] = Field(default=None, index=True)
 
+    team_id: Optional[int] = Field(default=None, foreign_key="team.id")
+
 
 class Hero(HeroBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+
+    team: Optional[Team] = Relationship(back_populates="heroes")
 
 
 class HeroCreate(HeroBase):
@@ -47,3 +53,4 @@ class HeroUpdate(SQLModel):
     name: Optional[str] = None
     secret_name: Optional[str] = None
     age: Optional[int] = None
+    team_id: Optional[int] = None
