@@ -1,4 +1,5 @@
 from typing import List
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Query, Depends
 from sqlmodel import Session, select
@@ -7,21 +8,23 @@ from .database import create_db_and_tables, engine
 from .models import Hero, HeroCreate, HeroRead, HeroUpdate, Team, TeamCreate, TeamRead, TeamUpdate, HeroReadWithTeam, \
     TeamReadWithHeroes
 
-app = FastAPI()
 
-
-@app.on_event("startup")
-def on_startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     create_db_and_tables()
+    yield
 
 
-def get_session():
+app = FastAPI(lifespan=lifespan)
+
+
+async def get_session():
     with Session(engine) as session:
         yield session
 
 
 @app.post("/teams/", response_model=TeamRead)
-def create_team(*, session: Session = Depends(get_session), team: TeamCreate):
+async def create_team(*, session: Session = Depends(get_session), team: TeamCreate):
     db_team = Team.model_validate(team)
     session.add(db_team)
     session.commit()
@@ -31,14 +34,14 @@ def create_team(*, session: Session = Depends(get_session), team: TeamCreate):
 
 
 @app.get("/teams/", response_model=List[TeamRead])
-def read_teams(*, session: Session = Depends(get_session), offset: int = 0, limit: int = Query(default=100, le=100)):
+async def read_teams(*, session: Session = Depends(get_session), offset: int = 0, limit: int = Query(default=100, le=100)):
     teams = session.exec(select(Team).offset(offset).limit(limit)).all()
 
     return teams
 
 
 @app.get("/teams/{team_id}", response_model=TeamReadWithHeroes)
-def read_team(*, session: Session = Depends(get_session), team_id: int):
+async def read_team(*, session: Session = Depends(get_session), team_id: int):
     team = session.get(Team, team_id)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -47,7 +50,7 @@ def read_team(*, session: Session = Depends(get_session), team_id: int):
 
 
 @app.patch("/teams/{team_id}", response_model=TeamRead)
-def update_team(*, session: Session = Depends(get_session), team_id: int, team: TeamUpdate):
+async def update_team(*, session: Session = Depends(get_session), team_id: int, team: TeamUpdate):
     db_team = session.get(Team, team_id)
     if not db_team:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -64,7 +67,7 @@ def update_team(*, session: Session = Depends(get_session), team_id: int, team: 
 
 
 @app.delete("/teams/{team_id}")
-def delete_team(*, session: Session = Depends(get_session), team_id: int):
+async def delete_team(*, session: Session = Depends(get_session), team_id: int):
     team = session.get(Team, team_id)
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
@@ -76,7 +79,7 @@ def delete_team(*, session: Session = Depends(get_session), team_id: int):
 
 
 @app.post("/heroes/", response_model=HeroRead)
-def create_hero(*, session: Session = Depends(get_session), hero: HeroCreate) -> Hero:
+async def create_hero(*, session: Session = Depends(get_session), hero: HeroCreate) -> Hero:
     db_hero = Hero.model_validate(hero)
     session.add(db_hero)
     session.commit()
@@ -86,14 +89,14 @@ def create_hero(*, session: Session = Depends(get_session), hero: HeroCreate) ->
 
 
 @app.get("/heroes/", response_model=List[HeroRead])
-def read_heroes(*, session: Session = Depends(get_session), offset: int = 0, limit: int = Query(default=100, le=100)):
+async def read_heroes(*, session: Session = Depends(get_session), offset: int = 0, limit: int = Query(default=100, le=100)):
     heroes = session.exec(select(Hero).offset(offset).limit(limit)).all()
 
     return heroes
 
 
 @app.get("/heroes/{hero_id}", response_model=HeroReadWithTeam)
-def read_hero(*, session: Session = Depends(get_session), hero_id: int):
+async def read_hero(*, session: Session = Depends(get_session), hero_id: int):
     hero = session.get(Hero, hero_id)
     if not hero:
         raise HTTPException(status_code=404, detail="Hero not found")
@@ -102,7 +105,7 @@ def read_hero(*, session: Session = Depends(get_session), hero_id: int):
 
 
 @app.patch("/heroes/{hero_id}", response_model=HeroRead)
-def update_hero(*, session: Session = Depends(get_session), hero_id: int, hero: HeroUpdate):
+async def update_hero(*, session: Session = Depends(get_session), hero_id: int, hero: HeroUpdate):
     db_hero = session.get(Hero, hero_id)
     if not db_hero:
         raise HTTPException(status_code=404, detail="Hero not found")
@@ -119,7 +122,7 @@ def update_hero(*, session: Session = Depends(get_session), hero_id: int, hero: 
 
 
 @app.delete("/heroes/{hero_id}")
-def delete_hero(*, session: Session = Depends(get_session), hero_id: int):
+async def delete_hero(*, session: Session = Depends(get_session), hero_id: int):
     hero = session.get(Hero, hero_id)
     if not hero:
         raise HTTPException(status_code=404, detail="Hero not found")
