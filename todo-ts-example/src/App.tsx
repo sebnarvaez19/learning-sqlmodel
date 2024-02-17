@@ -1,35 +1,41 @@
 import { Todos } from './components/Todos'
-import { useState } from 'react'
-import { FilterValues, TodoId, TodoIdCompleted, TodoTitle } from './types'
+import { useEffect, useState } from 'react'
+import { FilterValues, ListOfTodos, TodoId, TodoIdCompleted, TodoTitle } from './types'
 import { TODO_FILTERS } from './consts'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
 
-const mockToDos = [
-  { id: '1', title: 'ToDo 1', completed: true },
-  { id: '2', title: 'ToDo 2', completed: false },
-  { id: '3', title: 'ToDo 3', completed: false }
-]
+const apiPath = "http://localhost:8000/tasks/"
 
 const App: React.FC = () => {
-  const [todos, setTodos] = useState(mockToDos)
+  const [todos, setTodos] = useState<ListOfTodos>([])
+  const fecthTodos = async () => {
+    const response = await fetch(apiPath)
+    const todos: ListOfTodos = await response.json()
+    setTodos(todos)
+  }
+
+  useEffect(() => {
+    fecthTodos()
+  }, [])
+
   const [filterSelected, setFilterSelected] = useState<FilterValues>(TODO_FILTERS.ALL)
 
   const handleRemove = ({ id }: TodoId) => {
-    const newTodos = todos.filter(todo => todo.id !== id)
-    setTodos(newTodos)
+    fetch(apiPath + `${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+    }).then(fecthTodos)
   }
 
   const handleComplete = ({ id, completed }: TodoIdCompleted ) => {
-    const newTodos = todos.map(todo => {
-      if (todo.id === id) {
-        return {...todo, completed}
-      }
-      
-      return todo
-    })
+    const body = { completed: completed }
 
-    setTodos(newTodos)
+    fetch(apiPath + `${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    }).then(fecthTodos)
   }
 
   const handleFilterChange = (filter: FilterValues) => {
@@ -37,8 +43,8 @@ const App: React.FC = () => {
   }
 
   const handleRemoveCompleted = () => {
-    const newTodos = todos.filter(todo => !todo.completed)
-    setTodos(newTodos)
+    const completedTodos = todos.filter(todo => todo.completed)
+    completedTodos.map((todo) => {handleRemove({id: todo.id})})
   }
 
   const activeCount = todos.filter(todo => !todo.completed).length
@@ -51,14 +57,13 @@ const App: React.FC = () => {
   })
 
 const handleAddTodo = ({ title }: TodoTitle ) => {
-  const newTodo = {
-    id: `${crypto.randomUUID()}`,
-    title: title,
-    completed: false,
-  }
+  const body = {title: title}
 
-  const newTodos = [...todos, newTodo]
-  setTodos(newTodos)
+  fetch(apiPath, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  }).then(fecthTodos)
 }
 
   return (

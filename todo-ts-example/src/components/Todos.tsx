@@ -7,7 +7,7 @@ interface Props {
   onToggleCompleted: ({id, completed}: TodoIdCompleted) => void
 }
 
-export const Todos: React.FC<Props> = ({ todos, onRemoveTodo, onToggleCompleted }) => {
+export const Todos: React.FC<Props> = ({ todos, onRemoveTodo, onToggleCompleted }) => {  
   return (
     <ul className='todo-list'>
       {todos.map(todo => (
